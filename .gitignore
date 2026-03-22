@@ -1,0 +1,31 @@
+# Java & Maven
+target/
+*.class
+*.jar
+*.war
+*.ear
+
+# Eclipse
+.settings/
+.project
+.classpath
+.metadata/
+bin/
+*.tmp
+*.bak
+*.swp
+*~
+.sts4-cache/
+
+# IntelliJ (혹시 다른 팀원이 쓸 수도 있으니)
+.idea/
+*.iml
+*.iws
+out/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment variables (중요: API 키 노출 방지)
+.env

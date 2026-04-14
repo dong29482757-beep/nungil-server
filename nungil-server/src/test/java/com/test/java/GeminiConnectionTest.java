@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
-import com.nungil.domain.vision.external.GeminiApiClient;
+import com.nungil.infrastructure.external.google.GeminiRestAdapter;
 
 @SpringJUnitConfig(locations = {
     "file:src/main/webapp/WEB-INF/spring/root-context.xml",
@@ -17,7 +17,7 @@ import com.nungil.domain.vision.external.GeminiApiClient;
 public class GeminiConnectionTest {
 
     @Autowired
-    private GeminiApiClient geminiApiClient;
+    private GeminiRestAdapter geminiApiClient;
 
     // 설정 파일에서 키를 잘 읽어오는지 확인용
     @Value("${google.ai.api-key:KEY_NOT_FOUND}")

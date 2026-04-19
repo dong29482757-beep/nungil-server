@@ -29,3 +29,6 @@ Thumbs.db
 
 # Environment variables (중요: API 키 노출 방지)
 .env
+
+# Google Cloud 서비스 계정 키 (절대 커밋 금지)
+*.json

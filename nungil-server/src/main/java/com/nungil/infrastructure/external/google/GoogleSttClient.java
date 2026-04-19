@@ -1,14 +1,10 @@
 package com.nungil.infrastructure.external.google;
 
-import java.io.FileInputStream;
-import java.io.InputStream;
-import javax.annotation.PreDestroy;
+import jakarta.annotation.PreDestroy;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
-import com.google.api.gax.core.FixedCredentialsProvider;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.speech.v1.RecognitionConfig;
 import com.google.cloud.speech.v1.RecognizeResponse;
@@ -17,29 +13,31 @@ import com.google.cloud.speech.v1.SpeechSettings;
 import com.google.protobuf.ByteString;
 
 @Component
-public class GoogleSttClient { // [변경] Service -> Client (도구임을 명시)
-
-    @Value("${google.cloud.credentials.path}")
-    private String credentialsPath;
+public class GoogleSttClient {
 
     private SpeechClient speechClient;
 
+    /**
+     * 환경변수 GOOGLE_APPLICATION_CREDENTIALS 에 JSON 키 파일 경로를 설정해야 함
+     * 예) Windows: 시스템 환경변수에 GOOGLE_APPLICATION_CREDENTIALS=C:/path/to/key.json
+     */
     private void initIfNeeded() throws Exception {
         if (speechClient != null) return;
 
         System.out.println("[STT] Google Cloud Speech 초기화 중...");
-        GoogleCredentials credentials;
-        
-        try {
-            InputStream credStream = new FileInputStream(credentialsPath);
-            credentials = GoogleCredentials.fromStream(credStream);
-        } catch (Exception e) {
-            System.out.println("[STT] 파일 로드 실패, 환경변수 GOOGLE_APPLICATION_CREDENTIALS 사용");
-            credentials = GoogleCredentials.getApplicationDefault();
+
+        String credPath = System.getenv("GOOGLE_APPLICATION_CREDENTIALS");
+        if (credPath == null || credPath.isEmpty()) {
+            throw new IllegalStateException(
+                "환경변수 GOOGLE_APPLICATION_CREDENTIALS 가 설정되지 않았습니다.\n" +
+                "JSON 키 파일 경로를 환경변수에 등록해주세요."
+            );
         }
 
+        GoogleCredentials credentials = GoogleCredentials.getApplicationDefault();
+
         SpeechSettings settings = SpeechSettings.newBuilder()
-                .setCredentialsProvider(FixedCredentialsProvider.create(credentials))
+                .setCredentialsProvider(com.google.api.gax.core.FixedCredentialsProvider.create(credentials))
                 .build();
 
         this.speechClient = SpeechClient.create(settings);

@@ -1,6 +1,6 @@
 package com.nungil.infrastructure.external.google;
 
-import jakarta.annotation.PreDestroy;
+import javax.annotation.PreDestroy;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;

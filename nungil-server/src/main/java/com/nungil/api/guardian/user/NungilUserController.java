@@ -29,6 +29,7 @@ public class NungilUserController {
     /** 사용자 등록 POST /api/v1/guardian/users */
     @PostMapping("/users")
     public Map<String, Object> createUser(@RequestBody Map<String, Object> body) {
+        System.out.println("[API] POST /api/v1/guardian/users | guardianId=" + body.get("guardianId"));
         Map<String, Object> response = new HashMap<>();
         try {
             String guardianId = (String) body.get("guardianId");
@@ -38,9 +39,11 @@ public class NungilUserController {
             result.put("guardianId", user.getId());
             result.put("idx", user.getIdx());
 
+            System.out.println("[결과] 사용자 등록 완료 idx=" + user.getIdx());
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }
@@ -90,7 +93,6 @@ public class NungilUserController {
                 return response;
             }
 
-            // 1. Java 직접 매칭
             TaskVO matchedTask = allTasks.stream()
                     .filter(t -> t.getName().equals(item)
                               || t.getName().contains(item)
@@ -101,7 +103,6 @@ public class NungilUserController {
             if (matchedTask != null) {
                 System.out.println("[직접매칭] " + item + " → " + matchedTask.getName() + " (Gemini 생략)");
             } else {
-                // 2. Gemini 유사어 매칭 (fallback)
                 String taskListStr = allTasks.stream()
                         .map(TaskVO::getName)
                         .collect(Collectors.joining(", "));
@@ -153,6 +154,7 @@ public class NungilUserController {
     @GetMapping("/settings/user/{guardianId}/{idx}/whitelist")
     public Map<String, Object> getWhitelist(@PathVariable("guardianId") String guardianId,
                                              @PathVariable("idx") int idx) {
+        System.out.println("[API] GET /api/v1/guardian/settings/user/" + guardianId + "/" + idx + "/whitelist");
         Map<String, Object> response = new HashMap<>();
         try {
             List<Long> taskIds = nungilUserService.getWhiteList(guardianId, idx);
@@ -163,9 +165,11 @@ public class NungilUserController {
             result.put("idx", idx);
             result.put("allowedItems", items);
 
+            System.out.println("[결과] 화이트리스트 " + items.size() + "개");
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }
@@ -177,6 +181,7 @@ public class NungilUserController {
     public Map<String, Object> addWhitelist(@PathVariable("guardianId") String guardianId,
                                              @PathVariable("idx") int idx,
                                              @RequestBody Map<String, Object> body) {
+        System.out.println("[API] POST /api/v1/guardian/settings/user/" + guardianId + "/" + idx + "/whitelist | taskId=" + body.get("taskId"));
         Map<String, Object> response = new HashMap<>();
         try {
             Long taskId = Long.valueOf(body.get("taskId").toString());
@@ -192,13 +197,16 @@ public class NungilUserController {
                     ? "잘하고 있어요! 더 추가하거나 다음으로 넘어갈 수 있어요."
                     : "하나 더 알려주세요! 최소 2개가 필요해요.");
 
+            System.out.println("[결과] 화이트리스트 추가 완료 → 현재 " + taskIds.size() + "개");
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (IllegalArgumentException e) {
+            System.out.println("[결과] 화이트리스트 추가 실패 → " + e.getMessage());
             response.put("status", "ERROR");
             response.put("errorCode", e.getMessage());
             response.put("message", getErrorMessage(e.getMessage()));
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }
@@ -210,6 +218,7 @@ public class NungilUserController {
     public Map<String, Object> removeWhitelist(@PathVariable("guardianId") String guardianId,
                                                 @PathVariable("idx") int idx,
                                                 @PathVariable("taskId") Long taskId) {
+        System.out.println("[API] DELETE /api/v1/guardian/settings/user/" + guardianId + "/" + idx + "/whitelist/" + taskId);
         Map<String, Object> response = new HashMap<>();
         try {
             List<Long> remaining = nungilUserService.removeFromWhiteList(guardianId, idx, taskId);
@@ -219,9 +228,11 @@ public class NungilUserController {
             result.put("idx", idx);
             result.put("allowedItems", toItemList(remaining));
 
+            System.out.println("[결과] 화이트리스트 삭제 완료 → 남은 항목 " + remaining.size() + "개");
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }
@@ -233,6 +244,7 @@ public class NungilUserController {
     public Map<String, Object> saveProfile(@PathVariable("guardianId") String guardianId,
                                             @PathVariable("idx") int idx,
                                             @RequestBody Map<String, Object> body) {
+        System.out.println("[API] POST /api/v1/guardian/settings/user/" + guardianId + "/" + idx + "/profile | specialNote=" + body.get("specialNote"));
         Map<String, Object> response = new HashMap<>();
         try {
             String specialNote = (String) body.get("specialNote");
@@ -243,9 +255,11 @@ public class NungilUserController {
             result.put("idx", idx);
             result.put("message", "특이사항이 저장됐어요!");
 
+            System.out.println("[결과] 특이사항 저장 완료");
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }
@@ -256,10 +270,12 @@ public class NungilUserController {
     @GetMapping("/settings/user/{guardianId}/{idx}")
     public Map<String, Object> getUser(@PathVariable("guardianId") String guardianId,
                                         @PathVariable("idx") int idx) {
+        System.out.println("[API] GET /api/v1/guardian/settings/user/" + guardianId + "/" + idx);
         Map<String, Object> response = new HashMap<>();
         try {
             NungilUserVO user = nungilUserService.getUser(guardianId, idx);
             if (user == null) {
+                System.out.println("[결과] 사용자 없음 → USER_NOT_FOUND");
                 response.put("status", "ERROR");
                 response.put("errorCode", "USER_NOT_FOUND");
                 return response;
@@ -271,9 +287,11 @@ public class NungilUserController {
             result.put("specialNote", user.getSpecialNote());
             result.put("whiteList", parseWhiteListToItems(user.getWhiteList()));
 
+            System.out.println("[결과] 사용자 조회 완료 specialNote=" + user.getSpecialNote());
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }

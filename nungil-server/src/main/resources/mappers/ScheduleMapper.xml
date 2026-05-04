@@ -56,8 +56,10 @@
         WHERE schedule_id = #{scheduleId} AND status = 'pending'
     </update>
 
-    <delete id="deleteById">
-        DELETE FROM SCHEDULE WHERE schedule_id = #{scheduleId} AND status = 'pending'
-    </delete>
+    <update id="deleteById">
+        UPDATE SCHEDULE
+        SET status = 'deleted'
+        WHERE schedule_id = #{scheduleId} AND status = 'pending'
+    </update>
 
 </mapper>

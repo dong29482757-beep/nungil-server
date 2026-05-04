@@ -36,28 +36,36 @@ public class NungilUserService {
 
     /** 화이트리스트 추가 */
     public List<Long> addToWhiteList(String guardianId, int idx, Long taskId) {
-        NungilUserVO user = nungilUserMapper.findByIdAndIdx(guardianId, idx);
-        List<Long> taskIds = parseWhiteList(user.getWhiteList());
+        List<Long> taskIds = nungilUserMapper.findWhitelistTaskIds(guardianId, idx);
+        if ((taskIds == null || taskIds.isEmpty()) && nungilUserMapper.findByIdAndIdx(guardianId, idx) != null) {
+            taskIds = parseWhiteList(nungilUserMapper.findByIdAndIdx(guardianId, idx).getWhiteList());
+            for (Long id : taskIds) {
+                if (nungilUserMapper.existsWhitelistTask(guardianId, idx, id) == 0) {
+                    nungilUserMapper.insertWhitelistTask(guardianId, idx, id);
+                }
+            }
+            nungilUserMapper.updateWhiteList(guardianId, idx, null);
+            taskIds = nungilUserMapper.findWhitelistTaskIds(guardianId, idx);
+        }
 
-        if (taskIds.contains(taskId)) throw new IllegalArgumentException("ITEM_EXISTS");
+        if (nungilUserMapper.existsWhitelistTask(guardianId, idx, taskId) > 0) throw new IllegalArgumentException("ITEM_EXISTS");
         if (taskIds.size() >= 4)     throw new IllegalArgumentException("MAX_ITEM_EXCEEDED");
 
-        taskIds.add(taskId);
-        nungilUserMapper.updateWhiteList(guardianId, idx, joinWhiteList(taskIds));
-        return taskIds;
+        nungilUserMapper.insertWhitelistTask(guardianId, idx, taskId);
+        return nungilUserMapper.findWhitelistTaskIds(guardianId, idx);
     }
 
     /** 화이트리스트 삭제 */
     public List<Long> removeFromWhiteList(String guardianId, int idx, Long taskId) {
-        NungilUserVO user = nungilUserMapper.findByIdAndIdx(guardianId, idx);
-        List<Long> taskIds = parseWhiteList(user.getWhiteList());
-        taskIds.remove(taskId);
-        nungilUserMapper.updateWhiteList(guardianId, idx, joinWhiteList(taskIds));
-        return taskIds;
+        nungilUserMapper.deleteWhitelistTask(guardianId, idx, taskId);
+        return nungilUserMapper.findWhitelistTaskIds(guardianId, idx);
     }
 
     /** 화이트리스트 조회 */
     public List<Long> getWhiteList(String guardianId, int idx) {
+        List<Long> taskIds = nungilUserMapper.findWhitelistTaskIds(guardianId, idx);
+        if (taskIds != null && !taskIds.isEmpty()) return taskIds;
+
         NungilUserVO user = nungilUserMapper.findByIdAndIdx(guardianId, idx);
         return user != null ? parseWhiteList(user.getWhiteList()) : new ArrayList<>();
     }
@@ -76,12 +84,4 @@ public class NungilUserService {
         return result;
     }
 
-    private String joinWhiteList(List<Long> taskIds) {
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < taskIds.size(); i++) {
-            if (i > 0) sb.append(",");
-            sb.append(taskIds.get(i));
-        }
-        return sb.toString();
-    }
 }

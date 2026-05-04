@@ -1,6 +1,7 @@
 package com.nungil.domain.schedule;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -14,6 +15,7 @@ public class ScheduleService {
         this.scheduleMapper = scheduleMapper;
     }
 
+    @Transactional
     public void create(ScheduleVO schedule) {
         scheduleMapper.insert(schedule);
     }
@@ -26,15 +28,18 @@ public class ScheduleService {
         return scheduleMapper.findByUser(guardianId, idx, status);
     }
 
+    @Transactional
     public void complete(Long scheduleId) {
         scheduleMapper.updateSuccessAt(scheduleId);
     }
 
     // SC-007: 드래그로 시간 변경
+    @Transactional
     public void updateScheduledAt(Long scheduleId, LocalDateTime scheduledAt) {
         scheduleMapper.updateScheduledAt(scheduleId, scheduledAt);
     }
 
+    @Transactional
     public void delete(Long scheduleId) {
         scheduleMapper.deleteById(scheduleId);
     }

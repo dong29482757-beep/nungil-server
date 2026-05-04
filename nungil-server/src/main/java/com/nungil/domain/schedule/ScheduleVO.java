@@ -1,5 +1,7 @@
 package com.nungil.domain.schedule;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 
 public class ScheduleVO {
@@ -9,6 +11,7 @@ public class ScheduleVO {
     private String id;          // 보호자 id
     private int idx;            // 사용자 순번
     private String status;
+    @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd'T'HH:mm:ss")
     private LocalDateTime scheduledAt;
     private LocalDateTime createdAt;
     private LocalDateTime successAt;

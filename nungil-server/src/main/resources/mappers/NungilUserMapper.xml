@@ -38,4 +38,27 @@
         WHERE id = #{id} AND idx = #{idx}
     </update>
 
+    <select id="findWhitelistTaskIds" resultType="long">
+        SELECT task_id
+        FROM NUNGIL_USER_WHITELIST
+        WHERE id = #{id} AND idx = #{idx}
+        ORDER BY task_id
+    </select>
+
+    <select id="existsWhitelistTask" resultType="int">
+        SELECT COUNT(1)
+        FROM NUNGIL_USER_WHITELIST
+        WHERE id = #{id} AND idx = #{idx} AND task_id = #{taskId}
+    </select>
+
+    <insert id="insertWhitelistTask">
+        INSERT INTO NUNGIL_USER_WHITELIST (id, idx, task_id)
+        VALUES (#{id}, #{idx}, #{taskId})
+    </insert>
+
+    <delete id="deleteWhitelistTask">
+        DELETE FROM NUNGIL_USER_WHITELIST
+        WHERE id = #{id} AND idx = #{idx} AND task_id = #{taskId}
+    </delete>
+
 </mapper>

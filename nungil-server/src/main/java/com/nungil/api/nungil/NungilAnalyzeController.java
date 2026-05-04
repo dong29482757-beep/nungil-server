@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nungil.infrastructure.google.AnalysisOrchestrator;
 
 @RestController
-@RequestMapping("/api/v1/question")
+@RequestMapping({"/api/v1/nungil", "/api/v1/question"})
 public class NungilAnalyzeController {
 
     private final AnalysisOrchestrator orchestrator;

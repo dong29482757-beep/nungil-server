@@ -1,16 +1,13 @@
 package com.nungil.api.guardian.user;
 
-import com.nungil.domain.task.service.TaskService;
-import com.nungil.domain.task.vo.TaskVO;
-import com.nungil.domain.user.service.NungilUserService;
-import com.nungil.domain.user.vo.NungilUserVO;
-import com.nungil.infrastructure.external.google.GeminiRestAdapter;
+import com.nungil.domain.task.TaskService;
+import com.nungil.domain.task.TaskVO;
+import com.nungil.domain.user.NungilUserService;
+import com.nungil.domain.user.NungilUserVO;
+import com.nungil.infrastructure.google.GeminiRestAdapter;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -50,60 +47,104 @@ public class NungilUserController {
         return response;
     }
 
-    /** 과업 검색 (Gemini 유사어 매칭) GET /api/v1/guardian/tasks/search?item=빨래 */
-    @GetMapping("/tasks/search")
-    public Map<String, Object> searchTask(@RequestParam("item") String item) {
+    /** 전체 과업 목록 조회 GET /api/v1/guardian/tasks */
+    @GetMapping("/tasks")
+    public Map<String, Object> getAllTasks() {
+        System.out.println("[API] GET /api/v1/guardian/tasks");
         Map<String, Object> response = new HashMap<>();
         try {
-            // 1. DB에서 전체 과업 목록 조회
             List<TaskVO> allTasks = taskService.findAll();
-            Map<String, Object> result = new HashMap<>();
+            List<Map<String, Object>> tasks = new ArrayList<>();
+            for (TaskVO t : allTasks) {
+                Map<String, Object> item = new HashMap<>();
+                item.put("taskId", t.getTaskId());
+                item.put("taskName", t.getName());
+                tasks.add(item);
+            }
+            System.out.println("[결과] 전체 과업 " + tasks.size() + "개 반환");
+            response.put("tasks", tasks);
+        } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
+            response.put("tasks", Collections.emptyList());
+        }
+        return response;
+    }
+
+    /** 과업 검색 (직접매칭 → Gemini 유사어 매칭)
+     *  GET /api/v1/guardian/tasks/search?item=빨래
+     *  응답: { "found": true, "taskId": 5, "taskName": "빨래하기" }
+     */
+    @GetMapping("/tasks/search")
+    public Map<String, Object> searchTask(@RequestParam("item") String item) {
+        System.out.println("==============================================");
+        System.out.println("[API] GET /api/v1/guardian/tasks/search?item=" + item);
+        Map<String, Object> response = new HashMap<>();
+        try {
+            List<TaskVO> allTasks = taskService.findAll();
+            System.out.println("[DB] 전체 과업 수: " + (allTasks != null ? allTasks.size() : 0));
 
             if (allTasks == null || allTasks.isEmpty()) {
-                result.put("found", false);
-                result.put("message", "등록된 과업이 없어요.");
-                response.put("status", "SUCCESS");
-                response.put("result", result);
+                response.put("found", false);
+                response.put("taskId", null);
+                response.put("taskName", null);
                 return response;
             }
 
-            // 2. 과업 이름 목록 문자열 생성
-            String taskListStr = allTasks.stream()
-                    .map(TaskVO::getName)
-                    .collect(Collectors.joining(", "));
+            // 1. Java 직접 매칭
+            TaskVO matchedTask = allTasks.stream()
+                    .filter(t -> t.getName().equals(item)
+                              || t.getName().contains(item)
+                              || item.contains(t.getName()))
+                    .findFirst()
+                    .orElse(null);
 
-            // 3. Gemini 프롬프트 구성 및 호출
-            String prompt = "다음 과업 목록 중에서 '" + item + "'과 가장 유사한 항목을 딱 1개만 골라줘.\n"
-                    + "반드시 목록에 있는 항목 이름만 정확히 반환해줘. 다른 설명은 하지 마.\n"
-                    + "목록: " + taskListStr;
+            if (matchedTask != null) {
+                System.out.println("[직접매칭] " + item + " → " + matchedTask.getName() + " (Gemini 생략)");
+            } else {
+                // 2. Gemini 유사어 매칭 (fallback)
+                String taskListStr = allTasks.stream()
+                        .map(TaskVO::getName)
+                        .collect(Collectors.joining(", "));
 
-            String geminiAnswer = geminiRestAdapter.sendRequest(prompt, null, null);
+                String prompt = "다음 과업 목록 중에서 '" + item + "'와 의미가 같거나 매우 유사한 항목을 딱 1개만 골라줘.\n"
+                        + "단순히 집안일이라서 비슷한 게 아니라, 정말 같은 행동을 의미하는 것만 골라야 해.\n"
+                        + "예) '세탁' → '빨래하기' (같은 의미 ✅), '세탁' → '설거지하기' (다른 행동 ❌)\n"
+                        + "의미가 같거나 매우 유사한 항목이 없으면 반드시 '없음'이라고만 답해.\n"
+                        + "목록에 있는 항목 이름 그대로 반환해줘. 다른 설명은 절대 하지 마.\n"
+                        + "목록: " + taskListStr;
 
-            // 4. Gemini 응답에서 일치하는 TaskVO 찾기
-            TaskVO matchedTask = null;
-            if (geminiAnswer != null && !geminiAnswer.isBlank()) {
-                String matched = geminiAnswer.trim();
-                matchedTask = allTasks.stream()
-                        .filter(t -> matched.contains(t.getName()))
-                        .findFirst()
-                        .orElse(null);
+                System.out.println("[Gemini] 요청 중...");
+                String geminiAnswer = geminiRestAdapter.sendRequest(prompt, null, null);
+                System.out.println("[Gemini] 응답: " + geminiAnswer);
+
+                if (geminiAnswer != null && !geminiAnswer.isBlank()) {
+                    String matched = geminiAnswer.trim();
+                    if (!matched.equals("없음")) {
+                        matchedTask = allTasks.stream()
+                                .filter(t -> matched.contains(t.getName()))
+                                .findFirst()
+                                .orElse(null);
+                    }
+                }
             }
 
             if (matchedTask != null) {
-                result.put("found", true);
-                result.put("taskId", matchedTask.getTaskId());
-                result.put("item", matchedTask.getName());
-                result.put("message", matchedTask.getName() + "를 등록했어요!");
+                System.out.println("[결과] 매칭 성공 → " + matchedTask.getName());
+                response.put("found", true);
+                response.put("taskId", matchedTask.getTaskId());
+                response.put("taskName", matchedTask.getName());
             } else {
-                result.put("found", false);
-                result.put("message", "아직 " + item + "는 지원하지 않아요. 다른 활동을 알려주세요.");
+                System.out.println("[결과] 매칭 실패 → found=false");
+                response.put("found", false);
+                response.put("taskId", null);
+                response.put("taskName", null);
             }
-
-            response.put("status", "SUCCESS");
-            response.put("result", result);
+            System.out.println("==============================================");
         } catch (Exception e) {
-            response.put("status", "ERROR");
-            response.put("message", e.getMessage());
+            System.out.println("[ERROR] " + e.getMessage());
+            response.put("found", false);
+            response.put("taskId", null);
+            response.put("taskName", null);
         }
         return response;
     }

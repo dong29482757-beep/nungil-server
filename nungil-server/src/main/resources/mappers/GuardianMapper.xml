@@ -2,9 +2,9 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.nungil.domain.guardian.mapper.GuardianMapper">
+<mapper namespace="com.nungil.domain.guardian.GuardianMapper">
 
-    <resultMap id="GuardianResultMap" type="com.nungil.domain.guardian.vo.GuardianVO">
+    <resultMap id="GuardianResultMap" type="com.nungil.domain.guardian.GuardianVO">
         <id     property="id"       column="id"/>
         <result property="pw"       column="pw"/>
         <result property="email"    column="email"/>
@@ -14,7 +14,7 @@
         <result property="regdate"  column="regdate"/>
     </resultMap>
 
-    <insert id="insert" parameterType="com.nungil.domain.guardian.vo.GuardianVO">
+    <insert id="insert" parameterType="com.nungil.domain.guardian.GuardianVO">
         INSERT INTO GUARDIAN (id, pw, email, phone, name)
         VALUES (#{id}, #{pw}, #{email}, #{phone}, #{name})
     </insert>

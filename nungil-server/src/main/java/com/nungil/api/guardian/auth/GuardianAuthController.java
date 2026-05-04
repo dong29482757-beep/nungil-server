@@ -1,7 +1,7 @@
 package com.nungil.api.guardian.auth;
 
-import com.nungil.domain.guardian.service.GuardianService;
-import com.nungil.domain.guardian.vo.GuardianVO;
+import com.nungil.domain.guardian.GuardianService;
+import com.nungil.domain.guardian.GuardianVO;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -20,6 +20,7 @@ public class GuardianAuthController {
     /** 회원가입 POST /api/v1/guardian/auth/signup */
     @PostMapping("/signup")
     public Map<String, Object> signup(@RequestBody Map<String, Object> body) {
+        System.out.println("[API] POST /api/v1/guardian/auth/signup | id=" + body.get("id"));
         Map<String, Object> response = new HashMap<>();
         try {
             GuardianVO guardian = new GuardianVO();
@@ -35,13 +36,16 @@ public class GuardianAuthController {
             result.put("id", guardian.getId());
             result.put("name", guardian.getName());
 
+            System.out.println("[결과] 회원가입 성공 id=" + guardian.getId());
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (IllegalArgumentException e) {
+            System.out.println("[결과] 회원가입 실패 - " + e.getMessage());
             response.put("status", "ERROR");
             response.put("errorCode", e.getMessage());
             response.put("message", "이미 사용 중인 아이디입니다");
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }
@@ -51,6 +55,7 @@ public class GuardianAuthController {
     /** 로그인 POST /api/v1/guardian/auth/login */
     @PostMapping("/login")
     public Map<String, Object> login(@RequestBody Map<String, Object> body) {
+        System.out.println("[API] POST /api/v1/guardian/auth/login | id=" + body.get("id"));
         Map<String, Object> response = new HashMap<>();
         try {
             String id = (String) body.get("id");
@@ -63,13 +68,16 @@ public class GuardianAuthController {
             result.put("name", guardian.getName());
             result.put("email", guardian.getEmail());
 
+            System.out.println("[결과] 로그인 성공 id=" + guardian.getId());
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (IllegalArgumentException e) {
+            System.out.println("[결과] 로그인 실패 - 잘못된 자격증명");
             response.put("status", "ERROR");
             response.put("errorCode", "INVALID_CREDENTIALS");
             response.put("message", "아이디 또는 비밀번호가 올바르지 않습니다");
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }
@@ -79,15 +87,18 @@ public class GuardianAuthController {
     /** FCM 토큰 등록 PUT /api/v1/guardian/auth/fcm-token */
     @PutMapping("/fcm-token")
     public Map<String, Object> updateFcmToken(@RequestBody Map<String, Object> body) {
+        System.out.println("[API] PUT /api/v1/guardian/auth/fcm-token | id=" + body.get("id"));
         Map<String, Object> response = new HashMap<>();
         try {
             guardianService.updateFcmToken(
                 (String) body.get("id"),
                 (String) body.get("fcmToken")
             );
+            System.out.println("[결과] FCM 토큰 등록 완료");
             response.put("status", "SUCCESS");
             response.put("message", "FCM 토큰 등록 완료");
         } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
             response.put("message", e.getMessage());
         }

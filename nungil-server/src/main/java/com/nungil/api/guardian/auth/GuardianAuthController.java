@@ -87,11 +87,21 @@ public class GuardianAuthController {
     /** FCM 토큰 등록 PUT /api/v1/guardian/auth/fcm-token */
     @PutMapping("/fcm-token")
     public Map<String, Object> updateFcmToken(@RequestBody Map<String, Object> body) {
-        System.out.println("[API] PUT /api/v1/guardian/auth/fcm-token | id=" + body.get("id"));
+        // 클라이언트가 "guardianId" 또는 "id" 중 하나로 전송할 수 있음
+        String guardianId = body.get("guardianId") != null
+                ? (String) body.get("guardianId")
+                : (String) body.get("id");
+        System.out.println("[API] PUT /api/v1/guardian/auth/fcm-token | guardianId=" + guardianId);
         Map<String, Object> response = new HashMap<>();
         try {
+            if (guardianId == null || guardianId.isBlank()) {
+                response.put("status", "ERROR");
+                response.put("errorCode", "MISSING_GUARDIAN_ID");
+                response.put("message", "guardianId가 필요합니다");
+                return response;
+            }
             guardianService.updateFcmToken(
-                (String) body.get("id"),
+                guardianId,
                 (String) body.get("fcmToken")
             );
             System.out.println("[결과] FCM 토큰 등록 완료");

@@ -21,4 +21,7 @@ public interface NungilUserMapper {
 
     void updateSpecialNote(@Param("id") String id, @Param("idx") int idx,
                            @Param("specialNote") String specialNote);
+
+    void updateUserInfo(@Param("id") String id, @Param("idx") int idx,
+                        @Param("userName") String userName, @Param("userPhone") String userPhone);
 }

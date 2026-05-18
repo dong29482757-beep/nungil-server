@@ -9,11 +9,13 @@
         <id     property="idx"         column="idx"/>
         <result property="specialNote" column="special_note"/>
         <result property="whiteList"   column="white_list"/>
+        <result property="userName"    column="user_name"/>
+        <result property="userPhone"   column="user_phone"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.nungil.domain.user.NungilUserVO">
         INSERT INTO NUNGIL_USER (id, idx, special_note, white_list)
-        VALUES (#{id}, #{idx}, #{specialNote}, #{whiteList})
+        VALUES (#{id}, #{idx}, #{specialNote,jdbcType=CLOB}, #{whiteList,jdbcType=CLOB})
     </insert>
 
     <select id="getNextIdx" resultType="int">
@@ -35,6 +37,11 @@
 
     <update id="updateSpecialNote">
         UPDATE NUNGIL_USER SET special_note = #{specialNote}
+        WHERE id = #{id} AND idx = #{idx}
+    </update>
+
+    <update id="updateUserInfo">
+        UPDATE NUNGIL_USER SET user_name = #{userName}, user_phone = #{userPhone}
         WHERE id = #{id} AND idx = #{idx}
     </update>
 

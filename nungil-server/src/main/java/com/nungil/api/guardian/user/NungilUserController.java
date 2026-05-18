@@ -36,16 +36,18 @@ public class NungilUserController {
             NungilUserVO user = nungilUserService.createUser(guardianId);
 
             Map<String, Object> result = new HashMap<>();
-            result.put("guardianId", user.getId());
-            result.put("idx", user.getIdx());
+            result.put("userId", user.getId());
+            result.put("userIdx", user.getIdx());
 
-            System.out.println("[결과] 사용자 등록 완료 idx=" + user.getIdx());
+            System.out.println("[결과] 사용자 등록 완료 userIdx=" + user.getIdx());
             response.put("status", "SUCCESS");
             response.put("result", result);
         } catch (Exception e) {
-            System.out.println("[ERROR] " + e.getMessage());
+            String errMsg = e.getClass().getSimpleName() + ": " + e.getMessage();
+            System.out.println("[ERROR] createUser 실패 → " + errMsg);
+            e.printStackTrace();
             response.put("status", "ERROR");
-            response.put("message", e.getMessage());
+            response.put("message", errMsg);
         }
         return response;
     }
@@ -193,9 +195,7 @@ public class NungilUserController {
             result.put("taskId", taskId);
             result.put("registeredCount", taskIds.size());
             result.put("canComplete", taskIds.size() >= 2);
-            result.put("message", taskIds.size() >= 2
-                    ? "잘하고 있어요! 더 추가하거나 다음으로 넘어갈 수 있어요."
-                    : "하나 더 알려주세요! 최소 2개가 필요해요.");
+            result.put("message", "화이트리스트에 추가됐어요!");
 
             System.out.println("[결과] 화이트리스트 추가 완료 → 현재 " + taskIds.size() + "개");
             response.put("status", "SUCCESS");
@@ -231,6 +231,27 @@ public class NungilUserController {
             System.out.println("[결과] 화이트리스트 삭제 완료 → 남은 항목 " + remaining.size() + "개");
             response.put("status", "SUCCESS");
             response.put("result", result);
+        } catch (Exception e) {
+            System.out.println("[ERROR] " + e.getMessage());
+            response.put("status", "ERROR");
+            response.put("message", e.getMessage());
+        }
+        return response;
+    }
+
+    /** 피보호자 이름/전화번호 저장 POST /api/v1/guardian/settings/user/{guardianId}/{idx}/userinfo */
+    @PostMapping("/settings/user/{guardianId}/{idx}/userinfo")
+    public Map<String, Object> saveUserInfo(@PathVariable("guardianId") String guardianId,
+                                             @PathVariable("idx") int idx,
+                                             @RequestBody Map<String, Object> body) {
+        System.out.println("[API] POST /api/v1/guardian/settings/user/" + guardianId + "/" + idx + "/userinfo");
+        Map<String, Object> response = new HashMap<>();
+        try {
+            String userName  = (String) body.get("userName");
+            String userPhone = (String) body.get("userPhone");
+            nungilUserService.updateUserInfo(guardianId, idx, userName, userPhone);
+            response.put("status", "SUCCESS");
+            response.put("message", "피보호자 정보가 저장됐어요!");
         } catch (Exception e) {
             System.out.println("[ERROR] " + e.getMessage());
             response.put("status", "ERROR");
@@ -321,10 +342,7 @@ public class NungilUserController {
     }
 
     private String getErrorMessage(String errorCode) {
-        switch (errorCode) {
-            case "ITEM_EXISTS":       return "이미 등록된 과업입니다";
-            case "MAX_ITEM_EXCEEDED": return "과업은 최대 4개까지 등록 가능합니다";
-            default:                  return "오류가 발생했습니다";
-        }
+        if ("ITEM_EXISTS".equals(errorCode)) return "이미 등록된 과업입니다";
+        return "오류가 발생했습니다";
     }
 }

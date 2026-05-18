@@ -14,57 +14,70 @@ public class NungilUserService {
         this.nungilUserMapper = nungilUserMapper;
     }
 
-    /** 사용자 등록 (idx 자동 계산) */
     public NungilUserVO createUser(String guardianId) {
         int nextIdx = nungilUserMapper.getNextIdx(guardianId);
+        System.out.println("[DB] NUNGIL_USER MAX(idx) 조회 (id=" + guardianId + ") → nextIdx=" + nextIdx);
         NungilUserVO user = new NungilUserVO();
         user.setId(guardianId);
         user.setIdx(nextIdx);
+        user.setSpecialNote("");
+        user.setWhiteList("");
         nungilUserMapper.insert(user);
+        System.out.println("[DB] NUNGIL_USER INSERT (id=" + guardianId + ", idx=" + nextIdx + ")");
         return user;
     }
 
-    /** 보호자의 사용자 목록 */
     public List<NungilUserVO> getUsersByGuardian(String guardianId) {
-        return nungilUserMapper.findByGuardianId(guardianId);
+        List<NungilUserVO> list = nungilUserMapper.findByGuardianId(guardianId);
+        System.out.println("[DB] NUNGIL_USER 조회 (id=" + guardianId + ") → " + list.size() + "명");
+        return list;
     }
 
-    /** 단일 사용자 조회 */
     public NungilUserVO getUser(String guardianId, int idx) {
-        return nungilUserMapper.findByIdAndIdx(guardianId, idx);
+        NungilUserVO user = nungilUserMapper.findByIdAndIdx(guardianId, idx);
+        System.out.println("[DB] NUNGIL_USER 조회 (id=" + guardianId + ", idx=" + idx + ") → "
+                + (user != null ? "찾음" : "없음"));
+        return user;
     }
 
-    /** 화이트리스트 추가 */
     public List<Long> addToWhiteList(String guardianId, int idx, Long taskId) {
         NungilUserVO user = nungilUserMapper.findByIdAndIdx(guardianId, idx);
         List<Long> taskIds = parseWhiteList(user.getWhiteList());
 
         if (taskIds.contains(taskId)) throw new IllegalArgumentException("ITEM_EXISTS");
-        if (taskIds.size() >= 4)     throw new IllegalArgumentException("MAX_ITEM_EXCEEDED");
 
         taskIds.add(taskId);
-        nungilUserMapper.updateWhiteList(guardianId, idx, joinWhiteList(taskIds));
+        String newList = joinWhiteList(taskIds);
+        nungilUserMapper.updateWhiteList(guardianId, idx, newList);
+        System.out.println("[DB] NUNGIL_USER UPDATE white_list (id=" + guardianId + ", idx=" + idx + ") → " + newList);
         return taskIds;
     }
 
-    /** 화이트리스트 삭제 */
     public List<Long> removeFromWhiteList(String guardianId, int idx, Long taskId) {
         NungilUserVO user = nungilUserMapper.findByIdAndIdx(guardianId, idx);
         List<Long> taskIds = parseWhiteList(user.getWhiteList());
         taskIds.remove(taskId);
-        nungilUserMapper.updateWhiteList(guardianId, idx, joinWhiteList(taskIds));
+        String newList = joinWhiteList(taskIds);
+        nungilUserMapper.updateWhiteList(guardianId, idx, newList);
+        System.out.println("[DB] NUNGIL_USER UPDATE white_list 삭제 (id=" + guardianId + ", idx=" + idx + ") → " + newList);
         return taskIds;
     }
 
-    /** 화이트리스트 조회 */
     public List<Long> getWhiteList(String guardianId, int idx) {
         NungilUserVO user = nungilUserMapper.findByIdAndIdx(guardianId, idx);
-        return user != null ? parseWhiteList(user.getWhiteList()) : new ArrayList<>();
+        List<Long> list = user != null ? parseWhiteList(user.getWhiteList()) : new ArrayList<>();
+        System.out.println("[DB] NUNGIL_USER white_list 조회 (id=" + guardianId + ", idx=" + idx + ") → " + list);
+        return list;
     }
 
-    /** 특이사항 저장 */
+    public void updateUserInfo(String guardianId, int idx, String userName, String userPhone) {
+        nungilUserMapper.updateUserInfo(guardianId, idx, userName, userPhone);
+        System.out.println("[DB] NUNGIL_USER UPDATE user_name=" + userName + ", user_phone=" + userPhone + " (id=" + guardianId + ", idx=" + idx + ")");
+    }
+
     public void updateSpecialNote(String guardianId, int idx, String specialNote) {
         nungilUserMapper.updateSpecialNote(guardianId, idx, specialNote);
+        System.out.println("[DB] NUNGIL_USER UPDATE special_note (id=" + guardianId + ", idx=" + idx + ")");
     }
 
     private List<Long> parseWhiteList(String whiteList) {

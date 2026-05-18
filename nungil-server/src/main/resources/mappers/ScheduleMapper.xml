@@ -5,17 +5,18 @@
 <mapper namespace="com.nungil.domain.schedule.ScheduleMapper">
 
     <resultMap id="ScheduleResultMap" type="com.nungil.domain.schedule.ScheduleVO">
-        <id     property="scheduleId"  column="schedule_id"/>
-        <result property="taskId"      column="task_id"/>
-        <result property="id"          column="id"/>
-        <result property="idx"         column="idx"/>
-        <result property="status"      column="status"/>
-        <result property="scheduledAt" column="scheduled_at"/>
-        <result property="createdAt"   column="created_at"/>
-        <result property="successAt"   column="success_at"/>
-        <result property="location"    column="location"/>
-        <result property="specialNote" column="special_note"/>
-        <result property="taskName"    column="task_name"/>
+        <id     property="scheduleId"   column="schedule_id"/>
+        <result property="taskId"       column="task_id"/>
+        <result property="id"           column="id"/>
+        <result property="idx"          column="idx"/>
+        <result property="status"       column="status"/>
+        <result property="scheduledAt"  column="scheduled_at"/>
+        <result property="createdAt"    column="created_at"/>
+        <result property="successAt"    column="success_at"/>
+        <result property="location"     column="location"/>
+        <result property="specialNote"  column="special_note"/>
+        <result property="taskName"     column="task_name"/>
+        <result property="taskProcess"  column="task_process"/>
     </resultMap>
 
     <insert id="insert" parameterType="com.nungil.domain.schedule.ScheduleVO">
@@ -59,5 +60,25 @@
     <delete id="deleteById">
         DELETE FROM SCHEDULE WHERE schedule_id = #{scheduleId} AND status = 'pending'
     </delete>
+
+    <!-- NT-003: 시간 지난 pending 일정 -->
+    <select id="findOverdue" resultMap="ScheduleResultMap">
+        SELECT s.*, t.name AS task_name
+        FROM SCHEDULE s
+        LEFT JOIN TASK t ON s.task_id = t.task_id
+        WHERE s.status = 'pending'
+          AND s.scheduled_at &lt; SYSDATE
+    </select>
+
+    <!-- API 3-1: 오늘 이후 pending 일정 + 과업 단계 포함 -->
+    <select id="findTodayPendingByUser" resultMap="ScheduleResultMap">
+        SELECT s.*, t.name AS task_name, t.process AS task_process
+        FROM SCHEDULE s
+        LEFT JOIN TASK t ON s.task_id = t.task_id
+        WHERE s.id = #{id} AND s.idx = #{idx}
+          AND s.status = 'pending'
+          AND s.scheduled_at >= TRUNC(SYSDATE)
+        ORDER BY s.scheduled_at ASC
+    </select>
 
 </mapper>

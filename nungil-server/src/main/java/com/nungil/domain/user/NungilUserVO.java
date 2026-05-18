@@ -6,6 +6,8 @@ public class NungilUserVO {
     private int idx;         // 보호자당 순번
     private String specialNote;
     private String whiteList; // 콤마 구분 task_id 목록 (예: "1,2,3")
+    private String userName;
+    private String userPhone;
 
     public String getId() { return id; }
     public void setId(String id) { this.id = id; }
@@ -18,4 +20,10 @@ public class NungilUserVO {
 
     public String getWhiteList() { return whiteList; }
     public void setWhiteList(String whiteList) { this.whiteList = whiteList; }
+
+    public String getUserName() { return userName; }
+    public void setUserName(String userName) { this.userName = userName; }
+
+    public String getUserPhone() { return userPhone; }
+    public void setUserPhone(String userPhone) { this.userPhone = userPhone; }
 }

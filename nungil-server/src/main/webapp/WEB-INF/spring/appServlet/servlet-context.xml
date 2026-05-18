@@ -34,7 +34,8 @@
 
 	<context:property-placeholder location="classpath:application.properties"/>
 
-	<context:component-scan base-package="com.nungil" />
+	<!-- 컨트롤러 + 웹 설정만 스캔 (서비스/스케줄러는 root-context에서 관리) -->
+	<context:component-scan base-package="com.nungil.api, com.nungil.common" />
 
 	<bean class="org.springframework.web.servlet.view.InternalResourceViewResolver">
 		<property name="prefix" value="/WEB-INF/views/" />

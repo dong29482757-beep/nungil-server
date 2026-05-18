@@ -136,6 +136,12 @@
     <artifactId>google-auth-library-oauth2-http</artifactId>
     <version>1.23.0</version>
 </dependency>
+        <!-- Firebase Admin SDK (FCM) -->
+        <dependency>
+            <groupId>com.google.firebase</groupId>
+            <artifactId>firebase-admin</artifactId>
+            <version>9.2.0</version>
+        </dependency>
     </dependencies>
 
     <build>

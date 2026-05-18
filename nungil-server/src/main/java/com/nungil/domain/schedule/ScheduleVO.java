@@ -17,6 +17,7 @@ public class ScheduleVO {
 
     // JOIN 조회용
     private String taskName;
+    private String taskProcess;
 
     public Long getScheduleId() { return scheduleId; }
     public void setScheduleId(Long scheduleId) { this.scheduleId = scheduleId; }
@@ -50,4 +51,7 @@ public class ScheduleVO {
 
     public String getTaskName() { return taskName; }
     public void setTaskName(String taskName) { this.taskName = taskName; }
+
+    public String getTaskProcess() { return taskProcess; }
+    public void setTaskProcess(String taskProcess) { this.taskProcess = taskProcess; }
 }

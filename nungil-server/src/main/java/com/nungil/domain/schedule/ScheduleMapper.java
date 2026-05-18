@@ -25,4 +25,8 @@ public interface ScheduleMapper {
                            @Param("scheduledAt") LocalDateTime scheduledAt);
 
     void deleteById(@Param("scheduleId") Long scheduleId);
+
+    List<ScheduleVO> findTodayPendingByUser(@Param("id") String id, @Param("idx") int idx);
+
+    List<ScheduleVO> findOverdue();
 }

@@ -12,6 +12,7 @@ target/
 *.json
 *.env
 application-secret.properties
+src/main/resources/application.properties
 
 # 로그
 *.log
